@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Мем-Генератор</title>
+    <style>
+        /* ----- ОБЩИЕ СТИЛИ (тёмная тема, стекло, неон) ----- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(ellipse at center, #0f0c29, #302b63, #24243e);
+            padding: 20px;
+        }
+        .glass-card {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 24px;
+            padding: 40px 35px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
+            animation: fadeUp 0.6s ease-out;
+        }
+        @keyframes fadeUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            text-align: center;
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(247, 151, 30, 0.25);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+            margin-bottom: 28px;
+            letter-spacing: 0.3px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group label {
+            display: block;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            letter-spacing: 0.3px;
+        }
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.25s;
+            outline: none;
+        }
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: #f7971e;
+            box-shadow: 0 0 0 3px rgba(247, 151, 30, 0.2);
+            background: rgba(255,255,255,0.08);
+        }
+        .form-group select option {
+            background: #1a1a2e;
+            color: #fff;
+        }
+        .row-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        canvas {
+            width: 100%;
+            border-radius: 16px;
+            margin: 16px 0 12px;
+            border: 1px solid rgba(255,255,255,0.08);
+            background: #111;
+            display: block;
+            cursor: pointer;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 10px 0 6px;
+        }
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(255,255,255,0.06);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #1a1a2e;
+            border: none;
+            box-shadow: 0 4px 20px rgba(247, 151, 30, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(247, 151, 30, 0.45);
+        }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-success {
+            background: linear-gradient(135deg, #00b894, #00cec9);
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0, 206, 201, 0.25);
+        }
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 206, 201, 0.4);
+        }
+        .btn-gold {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #1a1a2e;
+            border: none;
+            font-size: 1.05rem;
+            box-shadow: 0 4px 25px rgba(247, 151, 30, 0.35);
+        }
+        .btn-gold:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 35px rgba(247, 151, 30, 0.5);
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .status {
+            text-align: center;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 10px 0 6px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        .status.loading {
+            display: block;
+            background: rgba(255,255,255,0.05);
+            color: #ffd200;
+            border: 1px solid rgba(255,215,0,0.15);
+        }
+        .status.success {
+            display: block;
+            background: rgba(0, 206, 201, 0.1);
+            color: #00cec9;
+            border: 1px solid rgba(0, 206, 201, 0.15);
+        }
+        .status.error {
+            display: block;
+            background: rgba(255, 71, 87, 0.1);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.15);
+        }
+        .ad-placeholder {
+            background: rgba(255,255,255,0.03);
+            border: 1px dashed rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.8rem;
+            margin: 16px 0 8px;
+            min-height: 70px;
+        }
+        footer {
+            text-align: center;
+            padding: 20px 0 4px;
+            color: rgba(255,255,255,0.2);
+            font-size: 0.75rem;
+            border-top: 1px solid rgba(255,255,255,0.04);
+            margin-top: 16px;
+        }
+        .footer-donate {
+            margin-top: 8px;
+        }
+        .footer-donate a {
+            color: rgba(255,215,0,0.5);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .footer-donate a:hover {
+            color: #ffd200;
+        }
+        @media (max-width: 600px) {
+            .glass-card { padding: 24px 18px; }
+            h1 { font-size: 1.8rem; }
+            .row-2col { grid-template-columns: 1fr; }
+            .btn { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-card">
+    <h1>🎭 Мем-Генератор</h1>
+    <p class="subtitle">Создай мем за секунды — или закажи AI-уникум</p>
+
+    <!-- ШАБЛОН -->
+    <div class="form-group">
+        <label>📌 Выбери шаблон</label>
+        <select id="templateSelect"></select>
+    </div>
+
+    <div class="row-2col">
+        <div class="form-group">
+            <label>⬆ Верхний текст</label>
+            <input type="text" id="topText" placeholder="Напиши что-то смешное..." />
+        </div>
+        <div class="form-group">
+            <label>⬇ Нижний текст</label>
+            <input type="text" id="bottomText" placeholder="И ещё..." />
+        </div>
+    </div>
+
+    <!-- ХОЛСТ -->
+    <canvas id="memeCanvas" width="600" height="400"></canvas>
+
+    <!-- КНОПКИ -->
+    <div class="btn-group">
+        <button class="btn btn-primary" id="generateBtn">🎨 Создать мем</button>
+        <button class="btn btn-success" id="downloadBtn">⬇ Скачать PNG</button>
+    </div>
+
+    <!-- СТАТУС -->
+    <div class="status" id="status"></div>
+
+    <!-- РАЗДЕЛИТЕЛЬ -->
+    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 20px 0 16px;" />
+
+    <!-- AI-ГЕНЕРАЦИЯ (ПЛАТНАЯ) -->
+    <div class="form-group">
+        <label>🤖 AI-генерация (уникальная картинка по описанию)</label>
+        <input type="text" id="aiPrompt" placeholder="Опиши что хочешь увидеть... например: 'кот в скафандре на Марсе'" />
+    </div>
+    <div class="btn-group">
+        <button class="btn btn-gold" id="aiGenerateBtn">✨ Сгенерировать за 7 ₽</button>
+    </div>
+
+    <!-- РЕКЛАМА -->
+    <div class="ad-placeholder" id="ad">Рекламное место</div>
+
+    <!-- ФУТЕР -->
+    <footer>
+        <p>© 2026 iiGRV. Все права защищены.</p>
+        <div class="footer-donate">
+            <a href="#" id="donateLink">❤️ Поддержать проект</a>
+        </div>
+    </footer>
+</div>
+
+<script>
+    // -------- ЗАЩИТА ОТ КОПИРОВАНИЯ --------
+    document.addEventListener('contextmenu', function(e) {
+        if (e.target.tagName === 'CANVAS') return;
+        e.preventDefault();
+        alert('Контекстное меню отключено для защиты авторских прав.');
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) || (e.ctrlKey && e.key === 'U')) {
+            e.preventDefault();
+            alert('Просмотр кода отключен для защиты авторских прав.');
+        }
+    });
+
+    // -------- ВСТРОЕННЫЕ ШАБЛОНЫ (без внешнего API) --------
+    const templateSelect = document.getElementById('templateSelect');
+    const canvas = document.getElementById('memeCanvas');
+    const ctx = canvas.getContext('2d');
+    const topText = document.getElementById('topText');
+    const bottomText = document.getElementById('bottomText');
+    const generateBtn = document.getElementById('generateBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const aiPrompt = document.getElementById('aiPrompt');
+    const aiGenerateBtn = document.getElementById('aiGenerateBtn');
+    const status = document.getElementById('status');
+
+    const templates = [
+        { slug: 'drake', name: 'Дрейк', url: 'https://i.imgflip.com/1otk96.jpg' },
+        { slug: 'distracted', name: 'Отвлечённый парень', url: 'https://i.imgflip.com/1bij.jpg' },
+        { slug: 'two-buttons', name: 'Две кнопки', url: 'https://i.imgflip.com/1g8my4.jpg' },
+        { slug: 'change-my-mind', name: 'Измени моё мнение', url: 'https://i.imgflip.com/24y1o.jpg' },
+        { slug: 'this-is-fine', name: 'Всё хорошо', url: 'https://i.imgflip.com/1ihzfe.jpg' }
+    ];
+
+    let currentTemplate = templates[0];
+
+    function loadTemplates() {
+        templateSelect.innerHTML = '<option value="">— Выбери шаблон —</option>';
+        templates.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t.slug;
+            opt.textContent = t.name;
+            templateSelect.appendChild(opt);
+        });
+        templateSelect.value = templates[0].slug;
+        currentTemplate = templates[0];
+        drawMeme('');
+    }
+
+    function loadTemplate(slug) {
+        const found = templates.find(t => t.slug === slug);
+        if (found) {
+            currentTemplate = found;
+            drawMeme('');
+        }
+    }
+
+    templateSelect.addEventListener('change', function() {
+        loadTemplate(this.value);
+    });
+
+    // -------- РИСОВАНИЕ МЕМА --------
+    function drawMeme(top = null, bottom = null) {
+        const w = canvas.width, h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        // Получаем выбранный шаблон
+        const slug = templateSelect.value;
+        const template = templates.find(t => t.slug === slug) || templates[0];
+
+        // Рисуем фон в зависимости от шаблона
+        const gradients = {
+            'drake': ['#1a2a6c', '#b21f1f', '#fdbb2d'],
+            'distracted': ['#f2994a', '#f2c94c'],
+            'two-buttons': ['#c31432', '#240b36'],
+            'change-my-mind': ['#f7971e', '#ffd200'],
+            'this-is-fine': ['#11998e', '#38ef7d']
+        };
+        const grad = ctx.createLinearGradient(0, 0, w, h);
+        const colors = gradients[slug] || ['#2d1b4e', '#1a1a3e'];
+        colors.forEach((c, i) => grad.addColorStop(i / (colors.length - 1), c));
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Рисуем эмодзи-символы в зависимости от шаблона
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = '120px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        const emojis = {
+            'drake': ['🙅‍♂️', '✅'],
+            'distracted': ['🧐', '😍'],
+            'two-buttons': ['❌', '✅'],
+            'change-my-mind': ['🤔', '💭'],
+            'this-is-fine': ['☕', '🔥']
+        };
+        const emojiPair = emojis[slug] || ['🎭', '🎭'];
+        ctx.fillText(emojiPair[0], w*0.3, h/2);
+        ctx.fillText(emojiPair[1], w*0.7, h/2);
+
+        // Накладываем текст пользователя (если он есть)
+        drawText(top, bottom);
+    }
+
+    function drawText(top, bottom) {
+        const w = canvas.width, h = canvas.height;
+        const t = top !== null ? top : topText.value;
+        const b = bottom !== null ? bottom : bottomText.value;
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.font = 'bold 32px Impact, Arial Black, sans-serif';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = 'black';
+        ctx.fillStyle = 'white';
+
+        // Верхний текст
+        if (t) {
+            const lines = wrapText(t, w - 40);
+            const lineHeight = 38;
+            const startY = 20;
+            lines.forEach((line, i) => {
+                const y = startY + i * lineHeight;
+                ctx.strokeText(line, w/2, y);
+                ctx.fillText(line, w/2, y);
+            });
+        }
+
+        // Нижний текст
+        if (b) {
+            const lines = wrapText(b, w - 40);
+            const lineHeight = 38;
+            const totalHeight = lines.length * lineHeight;
+            const startY = h - 20 - totalHeight;
+            lines.forEach((line, i) => {
+                const y = startY + i * lineHeight;
+                ctx.strokeText(line, w/2, y);
+                ctx.fillText(line, w/2, y);
+            });
+        }
+    }
+
+    function wrapText(text, maxWidth) {
+        const words = text.split(' ');
+        const lines = [];
+        let current = '';
+        for (const word of words) {
+            const test = current + word + ' ';
+            if (ctx.measureText(test).width < maxWidth) {
+                current = test;
+            } else {
+                if (current) lines.push(current.trim());
+                current = word + ' ';
+            }
+        }
+        if (current) lines.push(current.trim());
+        return lines.length ? lines : [text];
+    }
+
+    // -------- КНОПКА "СОЗДАТЬ МЕМ" --------
+    generateBtn.addEventListener('click', function() {
+        drawMeme();
+        setStatus('✅ Мем создан!', 'success');
+    });
+
+    // -------- КНОПКА "СКАЧАТЬ PNG" --------
+    downloadBtn.addEventListener('click', function() {
+        const link = document.createElement('a');
+        link.download = 'meme.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+
+    // -------- AI-ГЕНЕРАЦИЯ (ПЛАТНАЯ) --------
+    aiGenerateBtn.addEventListener('click', async function() {
+        const prompt = aiPrompt.value.trim();
+        if (!prompt) {
+            setStatus('⚠️ Введите описание для AI-генерации', 'error');
+            return;
+        }
+
+        setStatus('⏳ Генерация... это может занять 10–20 секунд', 'loading');
+        aiGenerateBtn.disabled = true;
+
+        try {
+            const resp = await fetch('https://d5ddijqm9tqadn3j026r.g4vq2kuy.apigw.yandexcloud.net/generate_meme', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+
+            if (!resp.ok) {
+                const err = await resp.json();
+                throw new Error(err.detail || 'Ошибка сервера');
+            }
+
+            const data = await resp.json();
+            // data.image_url — ссылка на сгенерированную картинку
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // Накладываем текст поверх AI-картинки
+                drawText();
+                setStatus('✅ AI-мем создан! Спасибо за оплату.', 'success');
+                aiGenerateBtn.disabled = false;
+            };
+            img.onerror = function() {
+                setStatus('❌ Не удалось загрузить сгенерированное изображение', 'error');
+                aiGenerateBtn.disabled = false;
+            };
+            img.src = data.image_url;
+
+        } catch (e) {
+            setStatus('❌ Ошибка: ' + e.message, 'error');
+            aiGenerateBtn.disabled = false;
+        }
+    });
+
+    // -------- СТАТУС --------
+    function setStatus(msg, type) {
+        status.textContent = msg;
+        status.className = 'status ' + type;
+        status.style.display = 'block';
+        if (type === 'success' || type === 'error') {
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 5000);
+        }
+    }
+
+    // -------- ИНИЦИАЛИЗАЦИЯ --------
+    loadTemplates();
+    drawMeme();
+</script>
+</body>
+</html>
