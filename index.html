@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Мем-Генератор</title>
     <style>
-        /* ----- ОБЩИЕ СТИЛИ (тёмная тема, стекло, неон) ----- */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -343,11 +342,9 @@
         const w = canvas.width, h = canvas.height;
         ctx.clearRect(0, 0, w, h);
 
-        // Получаем выбранный шаблон
         const slug = templateSelect.value;
         const template = templates.find(t => t.slug === slug) || templates[0];
 
-        // Рисуем фон в зависимости от шаблона
         const gradients = {
             'drake': ['#1a2a6c', '#b21f1f', '#fdbb2d'],
             'distracted': ['#f2994a', '#f2c94c'],
@@ -361,7 +358,6 @@
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, w, h);
 
-        // Рисуем эмодзи-символы в зависимости от шаблона
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = '120px sans-serif';
@@ -377,7 +373,6 @@
         ctx.fillText(emojiPair[0], w*0.3, h/2);
         ctx.fillText(emojiPair[1], w*0.7, h/2);
 
-        // Накладываем текст пользователя (если он есть)
         drawText(top, bottom);
     }
 
@@ -393,7 +388,6 @@
         ctx.strokeStyle = 'black';
         ctx.fillStyle = 'white';
 
-        // Верхний текст
         if (t) {
             const lines = wrapText(t, w - 40);
             const lineHeight = 38;
@@ -405,7 +399,6 @@
             });
         }
 
-        // Нижний текст
         if (b) {
             const lines = wrapText(b, w - 40);
             const lineHeight = 38;
@@ -462,7 +455,8 @@
         aiGenerateBtn.disabled = true;
 
         try {
-            const resp = await fetch('https://d5ddijqm9tqadn3j026r.g4vq2kuy.apigw.yandexcloud.net/generate_meme', {
+            // НОВЫЙ URL API GATEWAY
+            const resp = await fetch('https://d5doaobl1q0leur2puvb.g4vq2kuy.apigw.yandexcloud.net/generate_meme', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: prompt })
@@ -474,14 +468,19 @@
             }
 
             const data = await resp.json();
-            // data.image_url — ссылка на сгенерированную картинку
+
+            // Проверяем, что пришло поле image_base64
+            if (!data.image_base64) {
+                throw new Error('Сервер не вернул изображение');
+            }
+
+            // Формируем data URL из base64
             const img = new Image();
-            img.crossOrigin = 'anonymous';
+            // Для base64 не нужен crossOrigin
             img.onload = function() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                // Накладываем текст поверх AI-картинки
-                drawText();
+                drawText(); // накладываем текст поверх
                 setStatus('✅ AI-мем создан! Спасибо за оплату.', 'success');
                 aiGenerateBtn.disabled = false;
             };
@@ -489,7 +488,7 @@
                 setStatus('❌ Не удалось загрузить сгенерированное изображение', 'error');
                 aiGenerateBtn.disabled = false;
             };
-            img.src = data.image_url;
+            img.src = 'data:image/png;base64,' + data.image_base64;
 
         } catch (e) {
             setStatus('❌ Ошибка: ' + e.message, 'error');
