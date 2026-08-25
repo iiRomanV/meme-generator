@@ -455,8 +455,7 @@
         aiGenerateBtn.disabled = true;
 
         try {
-            // НОВЫЙ URL API GATEWAY
-            const resp = await fetch('https://d5doaobl1q0leur2puvb.g4vq2kuy.apigw.yandexcloud.net/generate_meme', {
+            const resp = await fetch('https://functions.yandexcloud.net/d4e9thv9i037e7seakqv', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt: prompt })
@@ -468,19 +467,15 @@
             }
 
             const data = await resp.json();
-
-            // Проверяем, что пришло поле image_base64
             if (!data.image_base64) {
                 throw new Error('Сервер не вернул изображение');
             }
 
-            // Формируем data URL из base64
             const img = new Image();
-            // Для base64 не нужен crossOrigin
             img.onload = function() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                drawText(); // накладываем текст поверх
+                drawText();
                 setStatus('✅ AI-мем создан! Спасибо за оплату.', 'success');
                 aiGenerateBtn.disabled = false;
             };
